@@ -1,10 +1,18 @@
+```
+// Query outgoing edges of outgoing vertices from the vertex with specified id and type
 1. g.V().has("id", id).has("type", type)
         .out(TYPE)
         .outE(TYPE)
+
+// Query outgoing edges of outgoing vertices from the vertex with specified id and type, 
+// and return p0, p1, p2 properties of the edges
 2. g.V().has("id", id).has("type", type)
         .out(TYPE)
         .outE(TYPE)
         .withProperties("p0", "p1", "p2")
+
+// Query outgoing edges of the target vertex (with specified id/type) 
+// and outgoing edges of its adjacent vertices, store them, then unfold and deduplicate
 3. g.V().has("id", id).has("type", type)
         .outE(TYPE)
         .store(LABEL)
@@ -13,19 +21,31 @@
         .store(LABEL)
         .cap(LABEL).Unfold()
         .Dedup()
+
+// Query outgoing vertices from the vertex with specified id and type, 
+// project p0 property values of vertices and count of incoming TYPE edges
 4. g.V().has("id", id).has("type", type)
         .out(TYPE)
         .project("p0", "p1")
         .by(values(p0))
         .by(in(TYPE).count())
+
+// Query outgoing vertices from the vertex with specified id and type, 
+// filter vertices with fewer than N outgoing TYPE edges
 5. g.V().has("id", id).has("type", type)
         .out(TYPE)
         .where(out(TYPE).count().lt(N))
+
+// Query outgoing edges of outgoing vertices from the vertex with specified id and type, 
+// return p0, p1, p2 properties of edges and sort by p3
 6. g.V().has("id", id).has("type", type)
         .out(TYPE)
         .outE(TYPE)
         .withProperties("p0", "p1", "p2")
         .order().by(p3)
+
+// Query top N outgoing vertices from the vertex with specified id and type, 
+// then top N outgoing edges of each vertex; return p0, p1, p2 properties of edges and sort by p3
 7. g.V().has("id", id).has("type", type)
         .out(TYPE)
         .limit(N)
@@ -33,11 +53,17 @@
         .limit(N)
         .withProperties("p0", "p1", "p2")
         .order().by(p3)
+
+// Query vertices reached via two consecutive outgoing TYPE edges from the vertex with specified id and type; 
+// return p0, p1, p2 properties of vertices and sort by p3
 8. g.V().has("id", id).has("type", type)
         .out(TYPE)
         .out(TYPE)
         .withProperties("p0", "p1", "p2")
         .order().by(p3)
+
+// Query top N outgoing vertices from the vertex with specified id and type, 
+// then top N outgoing TYPE vertices of each; return p0, p1, p2 properties of vertices and sort by p3
 9. g.V().has("id", id).has("type", type)
         .out(TYPE)
         .limit(N)
@@ -45,26 +71,45 @@
         .limit(N)
         .withProperties("p0", "p1", "p2")
         .order().by(p3)
+
+// Query outgoing vertices from the vertex with specified id and type, 
+// filter vertices that can return to the original vertex via incoming TYPE edges
 10. g.V().has("id", id).has("type", type)
         .out(TYPE)
         .where(
                 in(TYPE).has("id", id).has("type", type)
         )
+
+// Query outgoing vertices from the vertex with specified id and type, 
+// return p0, p1, p2 properties of vertices; 
+// filter those that can return to the original vertex via incoming TYPE edges
 11. g.V().has("id", id).has("type", type)
         .out(TYPE)
         .withProperties("p0", "p1", "p2")
         .where(in(TYPE).has("id", id).has("type", type))
+
+// Recursively query all vertices reachable via up to 2 outgoing TYPE edges 
+// from the vertex with specified id and type, 
+// then deduplicate 
 12. g.V().has("id", id).has("type", type)
         .Repeat(out(TYPE))
         .Emit()
         .Time(2)
         .Dedup()
+
+// Recursively query all vertices reachable via up to 2 outgoing TYPE edges 
+// from the vertex with specified id and type; return p0, p1, p2 properties of vertices, deduplicate and sort by p3
 13. g.V().has("id", id).has("type", type)
         .Repeat(out(TYPE).withProperties("p0", "p1", "p2"))
         .Emit()
         .Times(2)
         .Dedup()
         .Order().By(p3)
+
+// Query top N1 outgoing vertices from the vertex with specified id and type; 
+// filter vertices with global count of incoming TYPE edges less than N2. 
+// Then get top N3 incoming TYPE vertices of these vertices, 
+// filter those with global count of incoming TYPE edges less than N4, and return the paths
 14. g.V().has("id", id).has("type", type).out(TYPE).limit(N1)
         .where(
                 in(TYPE).count(global).is(P.lt(N2))
@@ -73,27 +118,45 @@
         ).where(
                 in(TYPE).count(global).is(P.lt(N4))
         ).path()
+
+// Query top N bidirectional TYPE-associated vertices from the vertex with 
+// specified id and type Then get top N3 outgoing TYPE vertices of each associated vertex (excluding vertices with id = N2)
 15. g.V().has("id", id).has("type", type)
         .Double(TYPE).limit(N)
         .local(
                 out(TYPE).has("id", without(N2)).limit(N3)
         )
+
+// Query top N1 bidirectional TYPE-associated vertices from the vertex with 
+// specified id and type. Then get top N2 outgoing TYPE vertices of each; group by p0 property of vertices, and record p1 property and group count
 16. g.V().has("id", id).has("type", type)
         .Double(TYPE).limit(N1)
         .out(TYPE).limit(N2)
         .group().by(p0).by(p1).by(Count())
+
+// Recursively query simple paths from the vertex with specified id and type 
+// via N outgoing TYPE edges 
 17. g.V().has("id", id).has("type", type)
         .Repeat(out(TYPE).SimplePath())
         .Time(N)
         .Path()
+
+// Recursively query simple paths from the vertex with specified id and type 
+// that return to the original vertex, via up to N outgoing TYPE edges 
 18. g.V().has("id", id).has("type", type)
         .Repeat(out(TYPE).SimplePath())
         .Emit(has("id", id).has("type", type))
         .Times(N)
         .Path()
+
+// Recursively query TYPE outgoing paths from the vertex with specified id and type 
+// (exclude vertices stored in LABEL, store new vertices in LABEL). 
+// Stop when returning to the original vertex or loop count > N, 
+// then return the paths 
 19. g.V().has("id", id).has("type", type).Repeat(out(TYPE).where(without(LABEL)).store(LABEL))
         .Until(
                 or(g.V().has("id", id).has("type", type)
                 .where(withloops().is(gt(N))
         )
         .Path()
+```
